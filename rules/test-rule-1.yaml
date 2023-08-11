@@ -1,0 +1,3 @@
+name: test-rule-1
+enabled: true
+templates: ["template1"]

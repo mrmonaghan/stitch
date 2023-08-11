@@ -1,0 +1,3 @@
+name: slack-markdown
+enabled: true
+templates: [slack-template-md]

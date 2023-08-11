@@ -1,0 +1,3 @@
+name: slack-combined
+enabled: true
+templates: [slack-template-combined]
