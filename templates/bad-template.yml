@@ -1,0 +1,14 @@
+name: bad-template
+actions: 
+  http:
+    - name: http-01-{{ .name }}
+      config:
+        method: POST
+        url: https://webhook.site/7919feaf-e6a4-4590-a2a5-70ae17363fd1
+        headers:
+          - name: Content-Type
+            value: application/json
+        body: |
+          {
+            "key": "{{ .name }}"
+          }

@@ -2,26 +2,27 @@ name: slack-template-md
 actions:
   slack:
     - name: slack-1
-      type: slack
       config:
         channels:
-          - mike-notification-testing
+          - mike-notification-testing-2
         blocks: false
         message: |
           multi-line message {{ .name }}
           next line {{ .name }}
   http:
     - name: http-1
-      type: http
       config:
-        method: get
-        path: https://fake-url.com/webhook
+        method: GET
+        url: https://webhook.site/7919feaf-e6a4-4590-a2a5-70ae17363fd1/{{ .name }}
         headers:
-          - name: header1
-            value: value1
-          - name: header2
-            value: value2
-        body: http body {{ .name }}
+          - name: Content-Type
+            value: application/json
+          - name: BadHeader
+            value: "{{ .name }}"
+        body: |
+          {
+            "key": "{{ .name }}"
+          }
 
         
 

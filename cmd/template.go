@@ -1,36 +1,36 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
+	"github.com/mrmonaghan/stitch/internal/files"
 	"github.com/mrmonaghan/stitch/internal/stitch"
 	"github.com/spf13/cobra"
 )
 
 // templateCmd represents the template command
 var templateCmd = &cobra.Command{
-	Use:   "template",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:  `template <template-name> '{"key1": "val1"}'`,
+	Long: `The template command hydrates the specified template with the provided data, then prints the results.`,
 	Args: cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		templateName := args[0]
 		data := args[1]
 		templateDir, _ := rootCmd.PersistentFlags().GetString("template-dir")
 
-		tpls, err := stitch.LoadTemplates(templateDir)
+		d, err := files.ResolveDirInput(templateDir)
+		if err != nil {
+			panic(err)
+		}
+
+		tpls, err := stitch.LoadTemplates(os.DirFS(d))
 		if err != nil {
 			panic(fmt.Errorf("unable to load templates: %w", err))
 		}
+
+		fmt.Println(tpls)
 
 		var tmpl stitch.Template
 		found := false
@@ -52,27 +52,29 @@ to quickly create a Cobra application.`,
 			panic(fmt.Errorf("error processing template data: %w", err))
 		}
 
-		renderedActions, err := tmpl.RenderAll(m)
-		if err != nil {
-			panic(err)
+		renderedActions := make(map[string]string)
+
+		for _, action := range tmpl.Actions.Slack {
+			if err := action.Render(m); err != nil {
+				panic(fmt.Errorf("unable to render template '%s' action '%s': %w", tmpl.Name, action.Name, err))
+			}
+			renderedActions[action.Name] = action.String()
 		}
 
-		for action, rendered := range renderedActions {
-			fmt.Printf("|| --- template: %s | action: %s --- ||\n%s\n", tmpl.Name, action, rendered)
+		for _, action := range tmpl.Actions.HTTP {
+			if err := action.Render(m); err != nil {
+				panic(fmt.Errorf("unable to render template '%s' action '%s': %w", tmpl.Name, action.Name, err))
+			}
+			renderedActions[action.Name] = action.String()
+		}
+
+		fmt.Printf("|| --- rendered actions for template: %s --- ||\n", tmpl.Name)
+		for _, rendered := range renderedActions {
+			fmt.Println(rendered)
 		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(templateCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// templateCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// templateCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

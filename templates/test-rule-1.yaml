@@ -1,0 +1,3 @@
+name: test-rule-in-wrong-dir
+enabled: true
+templates: ["template1"]
